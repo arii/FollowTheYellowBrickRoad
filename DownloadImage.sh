@@ -6,8 +6,11 @@ echo "Taking picture!"
 spawn telnet 192.168.1.1;
 expect "RS.edu] \$ ";
 send "rm /data/edu/testy.mjpeg \r";
+send "rm /data/edu/image.uyvy \r";
 expect "RS.edu] \$ ";
 send "yavta  --file=/data/edu/testy.mjpeg  -fMJPEG  /dev/video0 --capture=4 --skip 3 \r";
+expect "RS.edu] \$ ";
+send "yavta  --file=/data/edu/image.uyvy  -fYUYV -s 160x120  /dev/video0 --capture=4 --skip 3 \r";
 expect "RS.edu] \$ ";
 send "exit\r";
 expect eof
@@ -23,6 +26,8 @@ expect "(192.168.1.1:$USER):";
 send "\r";
 expect "ftp>";
 send "get testy.mjpeg \r";
+expect "ftp>";
+send "get image.uyvy \r";
 expect "ftp>";
 send "exit\r";
 expect eof
