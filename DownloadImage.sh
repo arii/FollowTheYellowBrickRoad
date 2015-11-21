@@ -28,7 +28,7 @@ send "exit\r";
 expect eof
 SCRIPT
 
-python ~/images/simple_processing.py
+python ~/images/FollowTheYellowBrickRoad/simple_processing.py
 
 # 3. Move the data file to the correct location
 

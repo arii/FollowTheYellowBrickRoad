@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <sys/time.h>
 #include <math.h>
 #include <inttypes.h>
@@ -95,31 +96,23 @@ unsigned char byte;          /* for data conversion */
 
 char filename[20];
 char filetype[20];
-char ffilename[20];
+char ffilename[20]="image.uyvy";
 
+pixel2_t fileimage[80*120];
 
 //helper variables
 long   i, j;                 /* loop variables */
 int lastImg;
 int programMode;
+float x_avg = 0;
+int hits = 0;
 
 
 
+//printf("ID of last image to process ? \n");
+//scanf("%i", &lastImg);
 
-//read test images
-//---------
-
-if ((programMode==2) || (programMode==3))
-{
-
-if (programMode==2) {
-	printf("Note that lookuptable.dat must be available in DroneExchange/params/! \n");
-	}
-
-printf("ID of last image to process ? \n");
-scanf("%i", &lastImg);
-
-
+/*
 for (kimg=6;kimg<=lastImg;kimg=kimg+6)
 	{
 
@@ -180,7 +173,7 @@ for (kimg=6;kimg<=lastImg;kimg=kimg+6)
 
 	//bin image, saved from drone
 	else
-	{
+	{*/
 		 FILE* data;
 		
 		  if ((data = fopen(ffilename, "rb")) == NULL)
@@ -218,7 +211,10 @@ for (kimg=6;kimg<=lastImg;kimg=kimg+6)
 			 U[i][j] = (float)fileimage[nx*j+i].u;  //noneg yuv!
 			 V[i][j] = (float)fileimage[nx*j+i].v;  //noneg yuv!
 
-
+            /* if (Y[i][j] > (float)240){
+                 x_avg += i;
+                 hits++;
+             }*/
 			 //conversion
 
 			 yuv[0] = Y[i][j];
@@ -234,11 +230,24 @@ for (kimg=6;kimg<=lastImg;kimg=kimg+6)
 			 R[i][j] = rgb[0];
 			 G[i][j] = rgb[1];
 			 B[i][j] = rgb[2];
+             printf("%0.f,", R[i][j]);
+
+
+             if (rgb[0]+rgb[1]+rgb[2] > 240*3){
+                 x_avg += i;
+                 hits++;
+             }
+
+
 		   }
+         printf("\n");
 
 		}
 
+    if (hits > 0){
+        x_avg = x_avg/hits;
+        printf("x average is %f", x_avg);
+    }
 	}
-
-
     
+
