@@ -210,10 +210,10 @@ for (kimg=6;kimg<=lastImg;kimg=kimg+6)
 			 U[i][j] = (float)fileimage[nx*j+i].u;  //noneg yuv!
 			 V[i][j] = (float)fileimage[nx*j+i].v;  //noneg yuv!
 
-            /* if (Y[i][j] > (float)240){
+            if (Y[i][j] > (float)240){
                  x_avg += i;
                  hits++;
-             }*/
+             }
 			 //conversion
 
 			 yuv[0] = Y[i][j];
@@ -229,23 +229,24 @@ for (kimg=6;kimg<=lastImg;kimg=kimg+6)
 			 R[i][j] = rgb[0];
 			 G[i][j] = rgb[1];
 			 B[i][j] = rgb[2];
-             printf("%0.f,", R[i][j]);
+             //printf("%0.f,", Y[i][j]);
 
-
+            /*
              if (rgb[0]+rgb[1]+rgb[2] > 240*3){
                  x_avg += i;
                  hits++;
              }
+             */
 
 
 		   }
-         printf("\n");
+         //printf("\n");
 
 		}
 
     if (hits > 0){
-        x_avg = x_avg/hits;
-        printf("x average is %f", x_avg);
+        x_avg = (x_avg/hits) / 80.0;
+        printf("x average is %f\n", x_avg);
     }
 	}
     
