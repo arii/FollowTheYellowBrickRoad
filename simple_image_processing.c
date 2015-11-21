@@ -70,7 +70,6 @@ rgb[2] = blue;
 
 int main() {
 
-printf("Simple test environment for image processing on Rolling spider \n");
 
 //image variables
 char   row[80];              /* for reading data */
