@@ -5,7 +5,7 @@ CPPFLAGS=-g $(shell root-config --cflags)
 LDFLAGS=-g $(shell root-config --ldflags)
 LDLIBS=$(shell root-config --libs)
 
-SRCS=simple_image_processing.c  ReferenceValueServer.c
+SRCS=simple_image_processing.c 
 OBJS=$(subst .cc,.o,$(SRCS))
 
 all: tool
@@ -13,7 +13,7 @@ all: tool
 tool: $(OBJS)
 	$(CXX) $(LDFLAGS) -o tool $(OBJS) $(LDLIBS) 
 
-tool.o: simple_image_processing.o ReferenceValueServer.o
+tool.o: simple_image_processing.o
 
 support.o: image_processing.h
 
