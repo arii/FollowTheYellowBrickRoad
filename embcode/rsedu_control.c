@@ -64,7 +64,7 @@
 #include <math.h>
 #include <inttypes.h>
 #include <stddef.h>
-#include "image_processing.h"
+//#include "image_processing.h"
 
 typedef signed char s8;
 typedef unsigned char u8;
@@ -74,61 +74,8 @@ typedef struct {
 	u8 u;
 	u8 y2;
 	u8 v;
-} __attribute__((packed)) pixel2_t;  /* Defines a couple of 2 consecutive pixels in YUV422 interlaced format */
-
-
-
-int raghav(pixel2_t fileimage[]) {
-
-long   nx =0, ny=0;        
-
-char filename[20]="/data/edu/image.uyvy";
-//pixel2_t fileimage[80*120];
-
-//helper variables
-long   i, j;                
-float x_avg = 0;
-int hits = 0;
-int y;
-
-  	 FILE* data;
-		
-		  if ((data = fopen(filename, "rb")) == NULL)
-			{
-				printf("ERROR opening file!\n");
-				return 1;
-			}
-		
-		nx=80;
-		ny=120;
-
-
-		fread(fileimage, sizeof(pixel2_t) *nx*ny, 1, data);
-		
-		fclose(data);
-		
-		//read image data
-		for (j=0; j<ny; j++)
-		{
-		 for (i=0; i<nx; i++)
-		   {
-			 y = (int)fileimage[nx*j+i].y1; //noneg yuv! transform to 0 centerd uav by (-16,-128,-128)
-
-            if (y > 240){
-                 x_avg += i;
-                 hits++;
-             }
-
-		   }
-
-		}
-
-    if (hits > 0){
-        x_avg =(int) (100*(x_avg/hits) / 80.0) - 50;
-        printf("x average is %f\n", x_avg);
-    }
-    return x_avg;
-	}
+} __attribute__((packed)) pixel2_t;  
+/* Defines a couple of 2 consecutive pixels in YUV422 interlaced format */
 
 
 
@@ -144,7 +91,7 @@ int FEAT_NOSAFETY 	= 0;	//1: drone is not automatically shut down when take off-
 //(This setting is dangerous but allows for more acrobatic maneuvers)
 
 //Flight time takeoff, calibration: Nr of Cycles
-int onCycles 		= 4000; //20sec total
+int onCycles 		= 10000; //one sec = 200 cycles 
 int calibCycles 	= 400;
 int takeoffCycles	= 200;
 
@@ -208,8 +155,8 @@ static P_DroneRS_Compensator_T DroneRS_Compensator_P = {
     1.5e-5,
     0.068,
 
-    { 8.0299999999999987e-5, 1.17e-5, 0.0, 1.1699999999999993e-5, 8.03e-5, 0.0,
-      0.0, 0.0, 0.0001366 },
+    { 8.0299999999999987e-5, 1.1699999999999996e-5, 0.0, 1.1699999999999995e-5,
+      8.03e-5, 0.0, 0.0, 0.0, 0.0001366 },
     -0.015875999999999998,
     0.0624,
     2.0,
@@ -242,14 +189,14 @@ static P_DroneRS_Compensator_T DroneRS_Compensator_P = {
                                         */
 
   {
-    { 0.28212412246252078, 1.2725392917168599, 2.4208439774454433,
-      2.4208439774454429, 1.272539291716859, 0.28212412246252039 },
+    { 0.28212412246252067, 1.272539291716861, 2.4208439774454473,
+      2.4208439774454487, 1.272539291716863, 0.28212412246252133 },
 
     { 1.0, 2.2287149173647665, 2.5244618916938606, 1.5772531712757014,
-      0.54102240682981717, 0.079562396085500836 },
+      0.541022406829817, 0.079562396085500781 },
 
-    { 0.0075092575286030347, -0.022498139897706496, 0.014988905760749223,
-      0.014988905760749157, -0.022498139897706482, 0.0075092575286030382 },
+    { 0.007509257528603033, -0.022498139897706472, 0.014988905760749172,
+      0.014988905760749172, -0.022498139897706455, 0.0075092575286030234 },
 
     { 1.0, -4.89810443312637, 9.5974881329446688, -9.4036722433820046,
       4.60730099744654, -0.90301240709954322 },
@@ -337,7 +284,7 @@ static P_DroneRS_Compensator_T DroneRS_Compensator_P = {
     /*  Expression: pInitialization.M
      * Referenced by: '<S131>/KalmanGainM'
      */
-    { 0.0057568600814408791, 0.0, 0.0, 0.0057568600814408791 },
+    { 0.005756860081440762, 0.0, 0.0, 0.005756860081440762 },
     0.0,                               /* Expression: 0
                                         * Referenced by: '<S69>/IIRgyroz'
                                         */
@@ -363,7 +310,7 @@ static P_DroneRS_Compensator_T DroneRS_Compensator_P = {
     /*  Expression: pInitialization.M
      * Referenced by: '<S16>/KalmanGainM'
      */
-    { 0.026241420641871412, 0.0697767360714959 },
+    { 0.026241420641871072, 0.069776736071495274 },
 
     /*  Expression: [0 0 quad.g]
      * Referenced by: '<S7>/gravity'
@@ -389,7 +336,7 @@ static P_DroneRS_Compensator_T DroneRS_Compensator_P = {
     /*  Expression: pInitialization.M
      * Referenced by: '<S71>/KalmanGainM'
      */
-    { 0.12546560898608936, 0.0, 0.0, 0.12546560898608936 },
+    { 0.1254656089860898, 0.0, 0.0, 0.1254656089860898 },
 
     /*  Expression: [0 0 -quad.g]
      * Referenced by: '<S67>/gravity'
@@ -460,7 +407,7 @@ static P_DroneRS_Compensator_T DroneRS_Compensator_P = {
     /*  Expression: pInitialization.L
      * Referenced by: '<S16>/KalmanGainL'
      */
-    { 0.026590304322228892, 0.0697767360714959 },
+    { 0.026590304322228548, 0.069776736071495274 },
 
     /*  Expression: pInitialization.A
      * Referenced by: '<S68>/A'
@@ -475,7 +422,7 @@ static P_DroneRS_Compensator_T DroneRS_Compensator_P = {
     /*  Expression: pInitialization.L
      * Referenced by: '<S71>/KalmanGainL'
      */
-    { 0.12546560898608936, 0.0, 0.0, 0.12546560898608936 },
+    { 0.1254656089860898, 0.0, 0.0, 0.1254656089860898 },
 
     /*  Expression: pInitialization.A
      * Referenced by: '<S128>/A'
@@ -490,7 +437,7 @@ static P_DroneRS_Compensator_T DroneRS_Compensator_P = {
     /*  Expression: pInitialization.L
      * Referenced by: '<S131>/KalmanGainL'
      */
-    { 0.0057568600814408791, 0.0, 0.0, 0.0057568600814408791 },
+    { 0.005756860081440762, 0.0, 0.0, 0.005756860081440762 },
     1U,                                /* Computed Parameter: Delay_DelayLength
                                         * Referenced by: '<S66>/Delay'
                                         */
@@ -870,12 +817,12 @@ void RSEDU_control(HAL_acquisition_t* hal_sensors_data, HAL_command_t* hal_senso
     static int counter = 0;
     static int counter_noOF = 0;
 
-    static float MAX_ACCELL 	= 6.0;
-    static float MAX_DELTADXY 	= 1.5;
+    static float MAX_ACCELL 	= 100;
+    static float MAX_DELTADXY 	= 200;
     static float MAX_RANGE 		= 10.0;
-    static float MIN_BATTTAKEOFF 	= 50.0;
+    static float MIN_BATTTAKEOFF = 50.0;
     static float MIN_BATT		= 30.0;
-    static int MAX_noOF 		= 50; //maximum acceptable numbers of cycles without optical flow
+    static int MAX_noOF 		= 100; //maximum acceptable numbers of cycles without optical flow
 
     //user input
     int power_usrinpt;
@@ -883,6 +830,7 @@ void RSEDU_control(HAL_acquisition_t* hal_sensors_data, HAL_command_t* hal_senso
     static double powerGain_eparam = 0.1;
 
     static pixel2_t fileimage[80*120];
+
     //data handling
     static double sensorCal[7];
     static double battLevelAvg;
@@ -902,14 +850,18 @@ void RSEDU_control(HAL_acquisition_t* hal_sensors_data, HAL_command_t* hal_senso
 
     static int serverstatus;
     static int of_fifo, vis_fifo;
-    int x_avg=0 ;
-    /* 
-    if (counter %400== 200){
-        system("/data/edu/take_image.sh");
-    }else if(counter %400==0){
-    x_avg = raghav(&fileimage);
-    printf("x average is %d \n\n\n NEWWW", x_avg);
-    }*/
+
+    //int x_avg=0 ;
+    
+   // if (counter % 400 == 200){
+   //     system("/data/edu/take_image.sh");
+   // }
+
+	//else if(counter % 400==0){
+    //x_avg = process_image(&fileimage);
+    //printf("x average is %d \n\n\n NEWWW", x_avg);
+    //}
+
 
     /*-------------------------
      * PROGRAM
@@ -1080,8 +1032,6 @@ void RSEDU_control(HAL_acquisition_t* hal_sensors_data, HAL_command_t* hal_senso
             printf("Connected to reference value server! \n");
         }
 
-
-
         //Powergain user prompt
         //-----
         /*
@@ -1091,7 +1041,6 @@ void RSEDU_control(HAL_acquisition_t* hal_sensors_data, HAL_command_t* hal_senso
         if (powerGain_eparam>1.0) {powerGain_eparam=1.0;};
         printf ("Power-Gain %f \n",powerGain_eparam);
         */
-
     }
 
     //Initialize inter-thread communication
@@ -1326,21 +1275,33 @@ void RSEDU_control(HAL_acquisition_t* hal_sensors_data, HAL_command_t* hal_senso
         //3.2 transition to actual flight: enable altitude-control setting
         else if(counter == calibCycles + takeoffCycles)
         {
-            DroneRS_Compensator_U_pos_refin[2] = -1.1;
+            DroneRS_Compensator_U_pos_refin[2] = -0.5;
         }
         //3.3 actual flight setting
         else if(counter < onCycles)
         {
             powerGain = powerGain_eparam;
 
+			//printf("y-actual %f\n", DroneRS_Compensator_Y_Y);
+			//printf("y-ref %f\n", DroneRS_Compensator_U_pos_refin[1]);
+
             //Read from reference value server
+			/*
             fcntl(sockfd, F_SETFL, O_NONBLOCK);
             memset(recvBuff, '\0', sizeof(recvBuff));
             recv(sockfd, recvBuff, sizeof(recvBuff), O_NONBLOCK);
+			*/
+
+			/*
+    		if (counter % 200 == 0){
+        		system("/data/edu/take_image.sh");
+				printf("Image saved!\n");
+    		}*/
 
 
             //Input to Model: reference values
 
+			/*
             if((recvBuff[0]) != '\0')
             {
                 sscanf(recvBuff, "%i %i %i %i %i", &run_flag, &pitch_ref_buff, &roll_ref_buff, &yaw_ref_buff, &alt_ref_buff);
@@ -1352,6 +1313,18 @@ void RSEDU_control(HAL_acquisition_t* hal_sensors_data, HAL_command_t* hal_senso
                     DroneRS_Compensator_U_pos_refin[2]    = (double)(alt_ref_buff / 100.0);
                 }
             }
+			*/
+
+			/*
+			 DroneRS_Compensator_U_attRS_refin[0] = (double)((yaw_ref_buff - 10000) / 1000.0);
+             DroneRS_Compensator_U_attRS_refin[1] = (double)((pitch_ref_buff - 10000) / 1000.0);
+             DroneRS_Compensator_U_attRS_refin[2] = (double)((roll_ref_buff - 10000) / 1000.0);
+
+             DroneRS_Compensator_U_pos_refin[0]    = (double)(alt_ref_buff / 100.0);
+			*/
+			
+
+
 
             if((DroneRS_Compensator_U_attRS_refin[1] == 0.0) && (DroneRS_Compensator_U_attRS_refin[2] == 0.0))
                 //control position + velocity if no specific reference attitude given (yaw angle ok)
@@ -1489,28 +1462,89 @@ void RSEDU_control(HAL_acquisition_t* hal_sensors_data, HAL_command_t* hal_senso
         }
 
         //Input to Model: image processing computations (DONOT setup as zero-order hold (pos_x -99.0 when no position available))
-        if((FEAT_POSVIS_RUN) && (vis_fifo > 0))
+        if((FEAT_POSVIS_RUN) && (vis_fifo > 0) && (counter % 50 == 0))
         {
-
-            if((read(vis_fifo, (float*)(&vis_data), sizeof(vis_data)) > 0) && ((vis_data[0] != 0.0) || (vis_data[1]) || (vis_data[3])))
+            if((read(vis_fifo, (float*)(&vis_data), sizeof(vis_data)) > 0)) //&& ((vis_data[0]) || (vis_data[1]) || (vis_data[3])))
             {
+				//printf("x-avg returned\n");
+                //printf("x_avg = %f\n",vis_data[0]);
+                //printf("yaw = %f\n",vis_data[3]);
                 DroneRS_Compensator_U_posVIS_datin[0] = (double)vis_data[0];
                 DroneRS_Compensator_U_posVIS_datin[1] = (double)vis_data[1];
                 DroneRS_Compensator_U_posVIS_datin[2] = (double)vis_data[2];
                 DroneRS_Compensator_U_posVIS_datin[3] = (double)vis_data[3];
-                printf("x=%f\n",vis_data[0]);
-                printf("x=%f\n",vis_data[1]);
-
             }
             else
             {
-                DroneRS_Compensator_U_posVIS_datin[0] = NO_VIS_X;
+				//printf("buffer empty\n");
+                DroneRS_Compensator_U_posVIS_datin[0] = 0.0;
                 DroneRS_Compensator_U_posVIS_datin[1] = 0.0;
                 DroneRS_Compensator_U_posVIS_datin[2] = 0.0;
                 DroneRS_Compensator_U_posVIS_datin[3] = 0.0;
             }
 
-        }
+
+			// measured yaw and measured lateral distance from image
+			float image_distance = (DroneRS_Compensator_U_posVIS_datin[0] / 50) * (DroneRS_Compensator_Y_Z) * tan(0.4733);
+			float image_yaw = 0; 
+
+			// set the yaw 
+			if((DroneRS_Compensator_U_posVIS_datin[3]) && (DroneRS_Compensator_U_posVIS_datin[3] != 0)) 
+			{
+				image_yaw = DroneRS_Compensator_U_posVIS_datin[3];
+				DroneRS_Compensator_U_attRS_refin[0] = DroneRS_Compensator_Y_yaw +  image_yaw;
+				//DroneRS_Compensator_U_attRS_refin[0] =  image_yaw;
+			}
+
+			//DroneRS_Compensator_U_pos_refin[1] = -.2*image_distance ; //+ cos(DroneRS_Compensator_Y_yaw);
+			// set y ref, x ref in ground frame
+			//DroneRS_Compensator_U_pos_refin[1] = image_distance ;//* cos(-DroneRS_Compensator_Y_yaw);
+			//DroneRS_Compensator_U_pos_refin[0] = image_distance * sin(-DroneRS_Compensator_Y_yaw);
+
+		DroneRS_Compensator_U_pos_refin[1] = DroneRS_Compensator_Y_Y - image_distance * cos(image_yaw) * cos(image_yaw + DroneRS_Compensator_Y_yaw);
+			DroneRS_Compensator_U_pos_refin[0] = DroneRS_Compensator_Y_X - image_distance * cos(image_yaw) * sin(image_yaw + DroneRS_Compensator_Y_yaw);
+            DroneRS_Compensator_U_pos_refin[0] = DroneRS_Compensator_U_pos_refin[0] + 0.15*cos(image_yaw + DroneRS_Compensator_Y_yaw);
+            DroneRS_Compensator_U_pos_refin[1] = DroneRS_Compensator_U_pos_refin[1] + 0.15*sin(image_yaw + DroneRS_Compensator_Y_yaw);
+
+            
+
+			// set constant fwd velocity
+			// DroneRS_Compensator_U_pos_refin[0] = DroneRS_Compensator_Y_X + 0.3;
+
+			printf("xyz yaw %.2f, %.2f, %.2f %.2f \n", DroneRS_Compensator_Y_X, DroneRS_Compensator_Y_Y, DroneRS_Compensator_Y_Z, DroneRS_Compensator_Y_yaw);
+			printf(" image_yaw dist %.2f \t  %.2f \n",  image_yaw, image_distance);
+
+			//printf("REF xyz %f, %f, %f\n", DroneRS_Compensator_U_pos_refin[0],DroneRS_Compensator_U_pos_refin[1],DroneRS_Compensator_U_pos_refin[2]);
+			//printf("REF yaw %f\n", DroneRS_Compensator_U_attRS_refin[0]);
+
+		}
+
+		// set constant fwd movement every 2 Hz 
+        //if(counter % 100 == 0)
+		//	DroneRS_Compensator_U_pos_refin[0] = DroneRS_Compensator_Y_X + 0.1;
+		//}
+
+
+/*        }
+		if ((counter > (calibCycles + takeoffCycles)) && (counter % 240 == 0))
+	{
+		if(DroneRS_Compensator_U_posVIS_datin[0] < -30)
+		{
+			DroneRS_Compensator_U_attRS_refin[2] = -0.05;
+		}
+		else if(DroneRS_Compensator_U_posVIS_datin[0] > 30)
+		{
+			DroneRS_Compensator_U_attRS_refin[2] = 0.05;
+		} 
+		else
+		{
+			DroneRS_Compensator_U_attRS_refin[2] = 0;
+		}
+		printf("x-avg %f\n roll_ref %f\n", DroneRS_Compensator_U_posVIS_datin[0], DroneRS_Compensator_U_attRS_refin[2]);
+		}
+		*/
+		//printf("x-avg %f\n roll_ref %f\n", DroneRS_Compensator_U_posVIS_datin[0], DroneRS_Compensator_U_attRS_refin[2]);
+
 
         //Input to Model: sensor signals
         DroneRS_Compensator_U_ddx 	= in->HAL_acc_SI.x;

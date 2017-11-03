@@ -10,6 +10,7 @@
 * ==================================
 */
 #include "rsedu_vis.h"
+#define PI 3.14159265
 
 /*
  * reconstruct camera pose
@@ -105,8 +106,6 @@ void reconstructCameraPose(float camerapos[3], float *camerayaw, float feature_p
 
 void RSEDU_image_processing(void * buffer)
 {
-
-
     //process control
     static int counter = 0;
 
@@ -165,14 +164,12 @@ void RSEDU_image_processing(void * buffer)
      * PROGRAM
      */
 
-
     //ptiming - declare and start
     //------------
     long long start;
     static FILE *ptfile;
     ptimer_start(FEAT_TIME, counter, &(start));
     //------------
-
 
     //process control
     counter++;
@@ -193,14 +190,17 @@ void RSEDU_image_processing(void * buffer)
             printf("rsedu_vis(): SUCCESS POSVIS FIFO exists! \n");
 
             vis_fifo = open("/tmp/vis_fifo", O_WRONLY);
+
             if(vis_fifo)
             {
-                vis_data[0] = -99.0;
+                vis_data[0] = 0;
                 write(vis_fifo, (float*)(&vis_data), sizeof(vis_data));
                 close(vis_fifo);
                 printf("rsedu_vis(): SUCCESS opening POSVIS-fifo!\n");
             }
-            else
+
+
+            if(!vis_fifo)
             {
                 printf("rsedu_vis(): ERROR opening POSVIS-fifo!\n");
             }
@@ -209,67 +209,159 @@ void RSEDU_image_processing(void * buffer)
         {
             printf("rsedu_vis(): ERROR opening POSVIS-fifo!\n");
         }
-
-
-
     }
 
 
+	// Run our image processing code @pseudo4Hz
+    if((counter % 15 == 0) && (NULL != image)) 
+    {
 
+	long nx = 80;
+	long ny = 120;          		//image size in x, y direction 
+	pixel2_t fileimage[nx*ny];
 
-    long   nx =0, ny=0;          /* image size in x, y direction */
+	//helper variables
+	int i,j;                
+	float x_sum = 0;
+	int hits = 0;
+	int y;
+	float top_x_sum = 0;
+	float bot_x_sum = 0;
+	int top_hits = 0;
+	int bot_hits = 0;
+	int offset = 40;
 
-    pixel2_t fileimage[80*120];
+	//read image data
+	for (j=0; j<ny; j++) {
+		for (i=0; i<nx; i++) {
+			y = (int) image[nx*j+i].y1; // y value of current pixel
 
-    //helper variables
-    long   i, j;                 /* loop variables */
-    float x_avg = 0;
-    int hits = 0;
-    int y;
+	    	if (y < 70) {
+	        	x_sum += i;
+	        	hits++;
 
-		
-		nx=80;
-		ny=120;
-
-
-		//read image data
-		for (j=0; j<ny; j++)
-		{
-		 for (i=0; i<nx; i++)
-		   {
-			 y = (int)image[nx*j+i].y1; //noneg yuv! transform to 0 centerd uav by (-16,-128,-128)
-
-            if (y > 240){
-                 x_avg += i;
-                 hits++;
-             }
-
-		   }
-
+	        	// this simple calc assumes tape passes through entire height of image
+		    	// top row - offset rows
+		    	if (j < offset) {
+					top_x_sum += i;
+					top_hits++;
+				}
+				// bottom row + offset rows
+				if (j > ny-offset) {
+					bot_x_sum += i;
+					bot_hits++;
+				}
+	    	}
 		}
+	}
 
-    if (hits > 0){
-        x_avg =(int) (100*(x_avg/hits) / 80.0) - 50;
-        //XXX printf("x average is %f\n", x_avg);
+	float top_x_avg = 100*(top_x_sum/top_hits)/nx;
+	float bot_x_avg = 100*(bot_x_sum/bot_hits)/nx;
+
+	float delta_y = ny-offset;
+	float delta_x = top_x_avg-bot_x_avg;
+
+	//printf("Top x_avg is %f\n", top_x_avg);
+	//printf("Bottom x_avg is %f\n", bot_x_avg);
+	//printf("Angle from center: %f radians (%f degrees)\n", angle, angle*180/PI);
+
+	float x_avg = 0;
+	float angle = 0;
+
+	if (hits > 0) {
+		x_avg = (int) (100*(x_sum/hits)/80.0)-50;
+		//printf("x average from center: %f\n", x_avg);
+	}
+
+	if (bot_x_avg > 0) {
+		angle = atan(delta_x/delta_y);
+	}
+
+
+
+/*
+ * dump pose into FIFO to make available to controls code
+ */
+
+ 	//compile data
+ 	vis_data[0] = (float) x_avg;
+ 	//vis_data[1] = 0.0;
+ 	//vis_data[2] = 0.0;
+ 	vis_data[3] = (float) angle;
+
+    vis_fifo = open("/tmp/vis_fifo", O_WRONLY);
+    if(vis_fifo)
+    {
+    	write(vis_fifo, (float*)(&vis_data), sizeof(vis_data));
+        close(vis_fifo);
     }
+}
 
-            /*
-             * dump pose into FIFO to make available to controls code
-             */
-            //compile data
-            vis_data[1] = (float)x_avg;
-            /*vis_data[1] = 0.0;
-            vis_data[2] = 0.0;
-            vis_data[3] = 0.0;*/
 
-            vis_fifo = open("/tmp/vis_fifo", O_WRONLY);
-            if(vis_fifo)
-            {
-                write(vis_fifo, (float*)(&vis_data), sizeof(vis_data));
-                close(vis_fifo);
-            }
+    //-----------
+    //STREAMING INSTRUCTIONS
+    //-----------
 
-    
+    /* Enabling image streaming, copies the picture into a named FIFO. Picture can then be sent to a remote Ubuntu computer using standard commands:
+
+    Run this one-liner in a shell on the RollingSpider (open terminal, log onto drone via telnet 192.168.1.1) :
+    (remember to connect via the Bluetooth link, since pluging the USB cable deactivates the camera !!!)
+
+      while [ 1 ]; do cat /tmp/picture | nc 192.168.1.2 1234; done
+
+    Run these two commands in two different shells on the remote Ubuntu computer:
+
+      mkfifo /tmp/rollingspiderpicture ; while [ 1 ]; do nc -l 1234 > /tmp/rollingspiderpicture; done
+      mplayer -demuxer rawvideo -rawvideo w=160:h=120:format=yuy2 -loop 0 /tmp/rollingspiderpicture
+
+    */
+
+    //stream image
+    //-----------
+/*
+    if(((counter % 60) == 0) && (NULL != image)) //@pseudo1Hz
+    {
+        printf("image_proc(): Write image to fifo...\n");
+        mkfifo("/tmp/picture", 0777);
+        fifo = open("/tmp/picture", O_WRONLY);
+        if(fifo)
+        {
+            //char word = "asd";
+            //write(fifo,word,320*120);
+            write(fifo, buffer, 320 * 120);
+            close(fifo);
+            usleep(5000);
+        }
+
+    } */
+
+    //save image
+    //-----------
+/*
+    if((counter % 15 == 0) && (NULL != image)) //@10Hz
+    {
+        FILE* data;
+        char filename[15];
+
+        //sprintf(filename,"/data/edu/imgs/img%i.bin",counter);
+        sprintf(filename, "/tmp/edu/imgs/img%i.bin", counter);
+        //sprintf(filename,"/tmp/imgs/img.bin");
+        //printf("image_proc(): img name: %s \n",filename);
+
+        mkdir("/tmp/edu", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        mkdir("/tmp/edu/imgs", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        if((data = fopen(filename, "wb")) == NULL)
+        {
+            printf("rsedu_vis(): ERROR opening img file\n");
+        }
+
+        fwrite(image, sizeof(pixel2_t) * 80 * 120, 1, data);
+        fclose(data);
+        usleep(5000);
+
+    }
+*/
+
 
     usleep(4000);
 
@@ -277,6 +369,4 @@ void RSEDU_image_processing(void * buffer)
     //----------
     ptimer_stopstore(FEAT_TIME, counter, start, ptfile);
     //----------
-
-
 }
